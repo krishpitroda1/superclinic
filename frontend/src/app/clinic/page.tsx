@@ -59,6 +59,35 @@ interface CompletedConsultation {
   dispenseTokenId: string;
 }
 
+const DEFAULT_LOBBY_QUEUE: QueueItem[] = [
+  { id: 'q-1', token: 1, name: 'Priya Sharma', age: 34, gender: 'F', mrn: 'MRN-2026-01', phone: '+91 98765 43210', reason: 'Severe Chest Discomfort & Palpitations', is_emergency: true, status: 'waiting' },
+  { id: 'q-2', token: 2, name: 'Rajesh Kumar', age: 52, gender: 'M', mrn: 'MRN-2026-02', phone: '+91 98111 22334', reason: 'Type 2 Diabetes Routine Follow-up', is_emergency: false, status: 'waiting' },
+  { id: 'q-3', token: 3, name: 'Amit Verma', age: 29, gender: 'M', mrn: 'MRN-2026-03', phone: '+91 99222 33445', reason: 'Seasonal Viral Fever & Bodyache', is_emergency: false, status: 'waiting' }
+];
+
+const DEFAULT_CONSULT_HISTORY: CompletedConsultation[] = [
+  {
+    id: 'hist-1',
+    token: 101,
+    name: 'Sunita Patel',
+    mrn: 'MRN-2026-00',
+    age: 45,
+    gender: 'F',
+    phone: '+91 97654 32100',
+    diagnosis: 'Essential Hypertension',
+    icd10: 'I10',
+    medications: [
+      { name: 'Telma 40 (Telmisartan)', dosage: '40mg', frequency: '1-0-0', duration: '30 days', instructions: 'Morning after breakfast' }
+    ],
+    advice: 'Low sodium diet, brisk walk 30 mins daily.',
+    feeAmount: 500,
+    feeStatus: 'paid_in_cabin',
+    paymentMethod: 'UPI',
+    completedAt: 'Today at 09:45 AM',
+    dispenseTokenId: 'tok-ap-9912401'
+  }
+];
+
 export default function ClinicDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'queue' | 'emr' | 'prescribe' | 'history' | 'billing' | 'broadcast' | 'reports'>('queue');
@@ -75,35 +104,10 @@ export default function ClinicDashboard() {
   const [activeConsultPatient, setActiveConsultPatient] = useState<QueueItem | null>(null);
 
   // Active Reception Lobby Queue (Patients waiting for Doctor)
-  const [lobbyQueue, setLobbyQueue] = useState<QueueItem[]>([
-    { id: 'q-1', token: 1, name: 'Priya Sharma', age: 34, gender: 'F', mrn: 'MRN-2026-01', phone: '+91 98765 43210', reason: 'Severe Chest Discomfort & Palpitations', is_emergency: true, status: 'waiting' },
-    { id: 'q-2', token: 2, name: 'Rajesh Kumar', age: 52, gender: 'M', mrn: 'MRN-2026-02', phone: '+91 98111 22334', reason: 'Type 2 Diabetes Routine Follow-up', is_emergency: false, status: 'waiting' },
-    { id: 'q-3', token: 3, name: 'Amit Verma', age: 29, gender: 'M', mrn: 'MRN-2026-03', phone: '+91 99222 33445', reason: 'Seasonal Viral Fever & Bodyache', is_emergency: false, status: 'waiting' }
-  ]);
+  const [lobbyQueue, setLobbyQueue] = useState<QueueItem[]>(DEFAULT_LOBBY_QUEUE);
 
   // Consultation History (Completed Consultations)
-  const [consultHistory, setConsultHistory] = useState<CompletedConsultation[]>([
-    {
-      id: 'hist-1',
-      token: 101,
-      name: 'Sunita Patel',
-      mrn: 'MRN-2026-00',
-      age: 45,
-      gender: 'F',
-      phone: '+91 97654 32100',
-      diagnosis: 'Essential Hypertension',
-      icd10: 'I10',
-      medications: [
-        { name: 'Telma 40 (Telmisartan)', dosage: '40mg', frequency: '1-0-0', duration: '30 days', instructions: 'Morning after breakfast' }
-      ],
-      advice: 'Low sodium diet, brisk walk 30 mins daily.',
-      feeAmount: 500,
-      feeStatus: 'paid_in_cabin',
-      paymentMethod: 'UPI',
-      completedAt: 'Today at 09:45 AM',
-      dispenseTokenId: 'tok-ap-9912401'
-    }
-  ]);
+  const [consultHistory, setConsultHistory] = useState<CompletedConsultation[]>(DEFAULT_CONSULT_HISTORY);
 
   // Doctor Prescription Form State
   const [rxDiagnosis, setRxDiagnosis] = useState('Acute Upper Respiratory Tract Infection (Viral Pharyngitis)');
@@ -128,21 +132,121 @@ export default function ClinicDashboard() {
   const [broadcastMsg, setBroadcastMsg] = useState('Dr. Sharma is attending to an emergency patient. Scheduled OPD appointments are running ~25 minutes delayed. Thank you for your patience.');
   const [broadcastSent, setBroadcastSent] = useState(false);
 
-  // Initialize session and patients from Supabase
-  useEffect(() => {
+  // Synchronize state across tabs and local storage
+  const broadcastSync = (queue: QueueItem[], history: CompletedConsultation[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const tenantKey = tenantInfo.name.replace(/\s+/g, '_').toLowerCase();
+      const storageKey = `superclinic_data_${tenantKey}`;
+      const payload = { queue, history, timestamp: Date.now() };
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('superclinic_clinic_channel');
+        channel.postMessage({ type: 'SYNC_CLINIC', tenantKey, payload });
+        channel.close();
+      }
+    } catch (e) {
+      console.error('Error during clinic sync broadcast:', e);
+    }
+  };
+
+  // Switch role between Doctor and Receptionist
+  const handleSwitchRole = (newRole: 'doctor' | 'receptionist') => {
+    const updatedTenant = {
+      ...tenantInfo,
+      role: newRole,
+      doctorName: newRole === 'doctor' ? 'Dr. Rajesh Sharma, MD' : 'Priya (Reception Desk)'
+    };
+    setTenantInfo(updatedTenant);
+    if (newRole === 'receptionist' && activeTab === 'prescribe') {
+      setActiveTab('queue');
+    }
     const rawSession = localStorage.getItem('superclinic_session');
     if (rawSession) {
       try {
         const parsed = JSON.parse(rawSession);
+        parsed.role = newRole;
+        parsed.full_name = updatedTenant.doctorName;
+        localStorage.setItem('superclinic_session', JSON.stringify(parsed));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // Initialize session and real-time synchronization
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let currentTenant = 'Apollo Multi-Speciality Hospital';
+    let currentRole = 'doctor';
+
+    const rawSession = localStorage.getItem('superclinic_session');
+    if (rawSession) {
+      try {
+        const parsed = JSON.parse(rawSession);
+        currentRole = parsed.role || 'doctor';
+        currentTenant = parsed.tenant_name || 'Apollo Multi-Speciality Hospital';
         setTenantInfo({
-          name: parsed.tenant_name || 'Apollo Multi-Speciality Hospital',
-          doctorName: parsed.full_name || 'Dr. Rajesh Sharma, MD',
-          role: parsed.role || 'doctor'
+          name: currentTenant,
+          doctorName: parsed.full_name || (currentRole === 'doctor' ? 'Dr. Rajesh Sharma, MD' : 'Priya (Reception Desk)'),
+          role: currentRole
         });
+        if (currentRole === 'receptionist' && activeTab === 'prescribe') {
+          setActiveTab('queue');
+        }
       } catch (e) {
         console.error('Session parse error:', e);
       }
     }
+
+    const tenantKey = currentTenant.replace(/\s+/g, '_').toLowerCase();
+    const storageKey = `superclinic_data_${tenantKey}`;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.queue)) setLobbyQueue(parsed.queue);
+        if (Array.isArray(parsed.history)) setConsultHistory(parsed.history);
+      } catch (err) {
+        console.error('Data load error:', err);
+      }
+    } else {
+      const initialPayload = {
+        queue: DEFAULT_LOBBY_QUEUE,
+        history: DEFAULT_CONSULT_HISTORY,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(storageKey, JSON.stringify(initialPayload));
+    }
+
+    // BroadcastChannel listener for real-time same-browser cross-tab sync
+    let channel: BroadcastChannel | null = null;
+    if ('BroadcastChannel' in window) {
+      channel = new BroadcastChannel('superclinic_clinic_channel');
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'SYNC_CLINIC' && event.data?.tenantKey === tenantKey && event.data?.payload) {
+          const { queue, history } = event.data.payload;
+          if (Array.isArray(queue)) setLobbyQueue(queue);
+          if (Array.isArray(history)) setConsultHistory(history);
+        }
+      };
+    }
+
+    // Storage event listener for cross-window sync
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === storageKey && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed.queue)) setLobbyQueue(parsed.queue);
+          if (Array.isArray(parsed.history)) setConsultHistory(parsed.history);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
 
     async function loadPatients() {
       try {
@@ -158,7 +262,13 @@ export default function ClinicDashboard() {
       }
     }
     loadPatients();
-  }, []);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantInfo.name]);
 
   // Emergency Queue Bump handler
   const handleEmergencyBump = (idx: number) => {
@@ -168,7 +278,9 @@ export default function ClinicDashboard() {
     target.token = 1;
     // shift other tokens
     updated.forEach((item, i) => item.token = i + 2);
-    setLobbyQueue([target, ...updated]);
+    const updatedQueue = [target, ...updated];
+    setLobbyQueue(updatedQueue);
+    broadcastSync(updatedQueue, consultHistory);
   };
 
   // Add Walk-in to Queue
@@ -186,7 +298,9 @@ export default function ClinicDashboard() {
       is_emergency: false,
       status: 'waiting'
     };
-    setLobbyQueue([...lobbyQueue, newEntry]);
+    const updatedQueue = [...lobbyQueue, newEntry];
+    setLobbyQueue(updatedQueue);
+    broadcastSync(updatedQueue, consultHistory);
   };
 
   // Doctor starts consulting patient
@@ -234,10 +348,14 @@ export default function ClinicDashboard() {
     };
 
     // 1. ADD to Consultation History
-    setConsultHistory([newRecord, ...consultHistory]);
+    const updatedHistory = [newRecord, ...consultHistory];
 
     // 2. REMOVE from Active Reception Lobby Queue (Requirement 5!)
-    setLobbyQueue(lobbyQueue.filter(q => q.id !== targetPatient.id));
+    const updatedQueue = lobbyQueue.filter(q => q.id !== targetPatient.id);
+
+    setConsultHistory(updatedHistory);
+    setLobbyQueue(updatedQueue);
+    broadcastSync(updatedQueue, updatedHistory);
 
     // Reset active patient and close modal
     setActiveConsultPatient(null);
@@ -250,16 +368,18 @@ export default function ClinicDashboard() {
 
   // Receptionist collects pending fee at front desk
   const handleCollectAtDesk = (recordId: string, method: string) => {
-    setConsultHistory(consultHistory.map(rec => {
+    const updatedHistory = consultHistory.map(rec => {
       if (rec.id === recordId) {
         return {
           ...rec,
-          feeStatus: 'paid_at_desk',
+          feeStatus: 'paid_at_desk' as const,
           paymentMethod: method
         };
       }
       return rec;
-    }));
+    });
+    setConsultHistory(updatedHistory);
+    broadcastSync(lobbyQueue, updatedHistory);
   };
 
   return (
@@ -281,16 +401,46 @@ export default function ClinicDashboard() {
                   HOSPITAL HIS (₹ INR)
                 </span>
               </div>
-              <p className="text-xs text-slate-400">{tenantInfo.doctorName} • OPD Consulting Room</p>
+              <p className="text-xs text-slate-400">
+                {tenantInfo.role === 'doctor' 
+                  ? `👨‍⚕️ ${tenantInfo.doctorName} • Doctor Cabin (OPD)` 
+                  : `📋 ${tenantInfo.doctorName} • Front Desk Reception`}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Right Status & Hospital Switcher */}
         <div className="flex items-center gap-3">
+          {/* Quick Role Switcher Toggle */}
+          <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
+            <button
+              type="button"
+              onClick={() => handleSwitchRole('doctor')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                tenantInfo.role === 'doctor'
+                  ? 'bg-teal-500 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>👨‍⚕️ Doctor View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchRole('receptionist')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                tenantInfo.role === 'receptionist'
+                  ? 'bg-teal-500 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>📋 Receptionist View</span>
+            </button>
+          </div>
+
           <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-slate-300">Reception Lobby: <strong className="text-white">{lobbyQueue.length} Waiting</strong></span>
+            <span className="text-slate-300">Lobby: <strong className="text-white">{lobbyQueue.length} Waiting</strong></span>
           </div>
 
           <button
@@ -315,6 +465,17 @@ export default function ClinicDashboard() {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Navigation Sidebar */}
         <aside className="w-full md:w-64 bg-white border-r border-slate-200 p-4 space-y-1.5 shrink-0">
+          <div className="pb-2.5 mb-2 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              {tenantInfo.role === 'doctor' ? '👨‍⚕️ Doctor Portal' : '📋 Reception Portal'}
+            </span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+              tenantInfo.role === 'doctor' ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {tenantInfo.role}
+            </span>
+          </div>
+
           <button
             onClick={() => setActiveTab('queue')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
@@ -328,15 +489,23 @@ export default function ClinicDashboard() {
             </span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('prescribe')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
-              activeTab === 'prescribe' ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <FileText className="w-4 h-4 text-teal-600" />
-            <span>Doctor Cabin & Prescriptions</span>
-          </button>
+          {/* DOCTOR CABIN & PRESCRIPTIONS - ONLY VISIBLE TO DOCTORS */}
+          {tenantInfo.role === 'doctor' && (
+            <button
+              onClick={() => setActiveTab('prescribe')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
+                activeTab === 'prescribe' ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <FileText className="w-4 h-4 text-teal-600" />
+              <span>Doctor Cabin & Prescriptions</span>
+              {lobbyQueue.length > 0 && (
+                <span className="ml-auto text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">
+                  Next: #{lobbyQueue[0].token}
+                </span>
+              )}
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab('history')}
@@ -474,13 +643,20 @@ export default function ClinicDashboard() {
                               Emergency Bump
                             </button>
                           )}
-                          <button
-                            onClick={() => handleStartConsult(item)}
-                            className="px-3.5 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition flex items-center gap-1"
-                          >
-                            <span>Consult in Cabin</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
+                          {tenantInfo.role === 'doctor' ? (
+                            <button
+                              onClick={() => handleStartConsult(item)}
+                              className="px-3.5 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 transition flex items-center gap-1"
+                            >
+                              <span>Consult in Cabin</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                              <span>Waiting for Doctor</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
@@ -492,6 +668,31 @@ export default function ClinicDashboard() {
 
           {/* TAB 2: DOCTOR CABIN & PRESCRIPTION WRITER */}
           {activeTab === 'prescribe' && (
+            tenantInfo.role !== 'doctor' ? (
+              <div className="bg-white p-8 rounded-2xl border border-amber-200 shadow-sm text-center max-w-xl mx-auto space-y-4 my-8">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto font-bold text-2xl">
+                  🔒
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-900">Restricted to Doctors Only</h3>
+                <p className="text-xs text-slate-600">
+                  Doctor Cabin & Prescriptions is restricted to the Doctor role. Receptionists manage the lobby queue, register walk-in patients, and collect pending OPD fees.
+                </p>
+                <div className="flex justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => setActiveTab('queue')}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+                  >
+                    Back to Reception Lobby
+                  </button>
+                  <button
+                    onClick={() => handleSwitchRole('doctor')}
+                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition"
+                  >
+                    Switch to Doctor View
+                  </button>
+                </div>
+              </div>
+            ) : (
             <div className="space-y-6 max-w-4xl">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -629,6 +830,7 @@ export default function ClinicDashboard() {
                 </div>
               </div>
             </div>
+            )
           )}
 
           {/* TAB 3: CONSULTATION HISTORY (Requirement 5) */}
@@ -800,26 +1002,54 @@ export default function ClinicDashboard() {
                         <h3 className="font-extrabold text-base text-slate-900 mt-1">{p.name}</h3>
                         <p className="text-xs text-slate-500">DOB: {p.dob} • {p.gender} • Blood Group: <strong className="text-rose-600">{p.blood_group}</strong></p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setActiveConsultPatient({
-                            id: p.id,
-                            token: lobbyQueue.length + 1,
-                            name: p.name,
-                            age: 35,
-                            gender: p.gender,
-                            mrn: p.mrn,
-                            phone: p.phone,
-                            reason: 'EMR Scheduled Consult',
-                            is_emergency: false,
-                            status: 'waiting'
-                          });
-                          setActiveTab('prescribe');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition"
-                      >
-                        Start Consult
-                      </button>
+                      {tenantInfo.role === 'doctor' ? (
+                        <button
+                          onClick={() => {
+                            setActiveConsultPatient({
+                              id: p.id,
+                              token: lobbyQueue.length + 1,
+                              name: p.name,
+                              age: 35,
+                              gender: p.gender,
+                              mrn: p.mrn,
+                              phone: p.phone,
+                              reason: 'EMR Scheduled Consult',
+                              is_emergency: false,
+                              status: 'waiting'
+                            });
+                            setActiveTab('prescribe');
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition"
+                        >
+                          Start Consult
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const nextToken = lobbyQueue.length + consultHistory.length + 1;
+                            const newEntry: QueueItem = {
+                              id: `emr-q-${Date.now()}`,
+                              token: nextToken,
+                              name: p.name,
+                              age: 35,
+                              gender: p.gender,
+                              mrn: p.mrn,
+                              phone: p.phone,
+                              reason: 'EMR Patient Visit',
+                              is_emergency: false,
+                              status: 'waiting'
+                            };
+                            const updatedQueue = [...lobbyQueue, newEntry];
+                            setLobbyQueue(updatedQueue);
+                            broadcastSync(updatedQueue, consultHistory);
+                            setActiveTab('queue');
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition flex items-center gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add to Lobby Queue</span>
+                        </button>
+                      )}
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
