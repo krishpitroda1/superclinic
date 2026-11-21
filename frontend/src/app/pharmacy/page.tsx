@@ -15,30 +15,76 @@ import {
   Plus, 
   Minus, 
   Trash2, 
-  AlertTriangle, 
   ArrowLeft, 
   LogOut, 
   Printer, 
-  ShoppingBag
+  ShoppingBag,
+  Building2
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { PharmacyInventoryItem } from '@/types';
+
+// TOP 30 INDIAN ESSENTIAL & MOST-SELLING MEDICINES (INITIALIZED TO 100 UNITS EACH)
+const TOP_30_INDIAN_MEDICINES = [
+  { id: 'ind-01', medicine_name: 'Dolo 650 (Paracetamol 650mg)', generic_name: 'Paracetamol', category: 'Analgesics / Fever', batch_number: 'BAT-IND-01', unit_mrp: 35, unit_cost_price: 18, unit_selling_price: 30, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-12-31', manufacturer: 'Micro Labs' },
+  { id: 'ind-02', medicine_name: 'Augmentin 625 Duo', generic_name: 'Amoxicillin + Clavulanic Acid', category: 'Antibiotics', batch_number: 'BAT-IND-02', unit_mrp: 220, unit_cost_price: 140, unit_selling_price: 195, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-10-31', manufacturer: 'GSK' },
+  { id: 'ind-03', medicine_name: 'Azee 500 (Azithromycin 500mg)', generic_name: 'Azithromycin', category: 'Antibiotics', batch_number: 'BAT-IND-03', unit_mrp: 135, unit_cost_price: 85, unit_selling_price: 120, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-08-31', manufacturer: 'Cipla' },
+  { id: 'ind-04', medicine_name: 'Pan 40 (Pantoprazole 40mg)', generic_name: 'Pantoprazole', category: 'Antacid / PPI', batch_number: 'BAT-IND-04', unit_mrp: 160, unit_cost_price: 95, unit_selling_price: 145, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-11-30', manufacturer: 'Alkem' },
+  { id: 'ind-05', medicine_name: 'Omez-D (Omeprazole + Domperidone)', generic_name: 'Omeprazole + Domperidone', category: 'Antacid / GERD', batch_number: 'BAT-IND-05', unit_mrp: 195, unit_cost_price: 120, unit_selling_price: 175, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-09-30', manufacturer: "Dr. Reddy's" },
+  { id: 'ind-06', medicine_name: 'Glycomet 500 (Metformin 500mg)', generic_name: 'Metformin Hydrochloride', category: 'Antidiabetic', batch_number: 'BAT-IND-06', unit_mrp: 45, unit_cost_price: 25, unit_selling_price: 40, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-06-30', manufacturer: 'USV' },
+  { id: 'ind-07', medicine_name: 'Amaryl 2 (Glimepiride 2mg)', generic_name: 'Glimepiride', category: 'Antidiabetic', batch_number: 'BAT-IND-07', unit_mrp: 145, unit_cost_price: 90, unit_selling_price: 130, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-07-31', manufacturer: 'Sanofi' },
+  { id: 'ind-08', medicine_name: 'Telma 40 (Telmisartan 40mg)', generic_name: 'Telmisartan', category: 'Hypertension / BP', batch_number: 'BAT-IND-08', unit_mrp: 135, unit_cost_price: 80, unit_selling_price: 120, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2027-11-30', manufacturer: 'Glenmark' },
+  { id: 'ind-09', medicine_name: 'Amlong 5 (Amlodipine 5mg)', generic_name: 'Amlodipine Besylate', category: 'Hypertension / BP', batch_number: 'BAT-IND-09', unit_mrp: 55, unit_cost_price: 30, unit_selling_price: 48, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-05-31', manufacturer: 'Micro Labs' },
+  { id: 'ind-10', medicine_name: 'Atorva 10 (Atorvastatin 10mg)', generic_name: 'Atorvastatin', category: 'Cholesterol / Statin', batch_number: 'BAT-IND-10', unit_mrp: 130, unit_cost_price: 75, unit_selling_price: 115, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-04-30', manufacturer: 'Zydus Cadila' },
+  { id: 'ind-11', medicine_name: 'Montair LC (Montelukast + Levocetirizine)', generic_name: 'Montelukast + Levocetirizine', category: 'Allergy & Respiratory', batch_number: 'BAT-IND-11', unit_mrp: 210, unit_cost_price: 130, unit_selling_price: 185, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-03-31', manufacturer: 'Cipla' },
+  { id: 'ind-12', medicine_name: 'Cetzine 10 (Cetirizine 10mg)', generic_name: 'Cetirizine Hydrochloride', category: 'Antiallergy', batch_number: 'BAT-IND-12', unit_mrp: 22, unit_cost_price: 10, unit_selling_price: 19, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2029-01-31', manufacturer: 'GSK' },
+  { id: 'ind-13', medicine_name: 'Ciplox 500 (Ciprofloxacin 500mg)', generic_name: 'Ciprofloxacin', category: 'Antibiotics', batch_number: 'BAT-IND-13', unit_mrp: 48, unit_cost_price: 25, unit_selling_price: 42, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-02-28', manufacturer: 'Cipla' },
+  { id: 'ind-14', medicine_name: 'Taxim-O 200 (Cefixime 200mg)', generic_name: 'Cefixime', category: 'Antibiotics', batch_number: 'BAT-IND-14', unit_mrp: 125, unit_cost_price: 75, unit_selling_price: 110, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-07-31', manufacturer: 'Alkem' },
+  { id: 'ind-15', medicine_name: 'Zerodol-SP (Aceclo + Para + Serratio)', generic_name: 'Aceclofenac + Paracetamol + Serratio', category: 'Pain & Swelling', batch_number: 'BAT-IND-15', unit_mrp: 125, unit_cost_price: 78, unit_selling_price: 112, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-06-30', manufacturer: 'Ipca Labs' },
+  { id: 'ind-16', medicine_name: 'Voveran 50 (Diclofenac 50mg)', generic_name: 'Diclofenac Sodium', category: 'Pain Relief', batch_number: 'BAT-IND-16', unit_mrp: 65, unit_cost_price: 38, unit_selling_price: 58, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-09-30', manufacturer: 'Novartis' },
+  { id: 'ind-17', medicine_name: 'Combiflam (Ibuprofen + Paracetamol)', generic_name: 'Ibuprofen + Paracetamol', category: 'Pain & Fever', batch_number: 'BAT-IND-17', unit_mrp: 47, unit_cost_price: 26, unit_selling_price: 42, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-11-30', manufacturer: 'Sanofi' },
+  { id: 'ind-18', medicine_name: 'Emeset 4 (Ondansetron 4mg)', generic_name: 'Ondansetron', category: 'Anti-Emetic', batch_number: 'BAT-IND-18', unit_mrp: 62, unit_cost_price: 35, unit_selling_price: 55, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-05-31', manufacturer: 'Cipla' },
+  { id: 'ind-19', medicine_name: 'Vomistop (Domperidone 10mg)', generic_name: 'Domperidone', category: 'Nausea Relief', batch_number: 'BAT-IND-19', unit_mrp: 40, unit_cost_price: 20, unit_selling_price: 35, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-08-31', manufacturer: 'Cipla' },
+  { id: 'ind-20', medicine_name: 'Flagyl 400 (Metronidazole 400mg)', generic_name: 'Metronidazole', category: 'Antiamoebic', batch_number: 'BAT-IND-20', unit_mrp: 25, unit_cost_price: 12, unit_selling_price: 22, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-10-31', manufacturer: 'Abbott' },
+  { id: 'ind-21', medicine_name: 'Rantac 150 (Ranitidine 150mg)', generic_name: 'Ranitidine Hydrochloride', category: 'Antacid', batch_number: 'BAT-IND-21', unit_mrp: 45, unit_cost_price: 24, unit_selling_price: 39, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-12-31', manufacturer: 'JB Chemicals' },
+  { id: 'ind-22', medicine_name: 'Losar 50 (Losartan Potassium 50mg)', generic_name: 'Losartan Potassium', category: 'Hypertension / BP', batch_number: 'BAT-IND-22', unit_mrp: 115, unit_cost_price: 68, unit_selling_price: 102, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-03-31', manufacturer: 'Unichem' },
+  { id: 'ind-23', medicine_name: 'Rosuvas 10 (Rosuvastatin 10mg)', generic_name: 'Rosuvastatin', category: 'Cholesterol / Statin', batch_number: 'BAT-IND-23', unit_mrp: 230, unit_cost_price: 145, unit_selling_price: 205, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-04-30', manufacturer: 'Sun Pharma' },
+  { id: 'ind-24', medicine_name: 'Deplatt 75 (Clopidogrel 75mg)', generic_name: 'Clopidogrel', category: 'Cardiac Care', batch_number: 'BAT-IND-24', unit_mrp: 120, unit_cost_price: 70, unit_selling_price: 105, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-07-31', manufacturer: 'Torrent' },
+  { id: 'ind-25', medicine_name: 'Thyronorm 50 (Levothyroxine 50mcg)', generic_name: 'Levothyroxine Sodium', category: 'Thyroid Care', batch_number: 'BAT-IND-25', unit_mrp: 165, unit_cost_price: 100, unit_selling_price: 148, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-06-30', manufacturer: 'Abbott' },
+  { id: 'ind-26', medicine_name: 'Calcirol Sachet (Cholecalciferol 60k)', generic_name: 'Vitamin D3 60,000 IU', category: 'Vitamins & D3', batch_number: 'BAT-IND-26', unit_mrp: 110, unit_cost_price: 60, unit_selling_price: 98, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-09-30', manufacturer: 'Cadila' },
+  { id: 'ind-27', medicine_name: 'Becosules Z (B-Complex + Zinc)', generic_name: 'Multivitamins with Zinc', category: 'Multivitamins', batch_number: 'BAT-IND-27', unit_mrp: 58, unit_cost_price: 32, unit_selling_price: 52, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-11-30', manufacturer: 'Pfizer' },
+  { id: 'ind-28', medicine_name: 'Shelcal 500 (Calcium + D3)', generic_name: 'Calcium Carbonate + D3', category: 'Bone & Calcium', batch_number: 'BAT-IND-28', unit_mrp: 145, unit_cost_price: 85, unit_selling_price: 130, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2028-12-31', manufacturer: 'Torrent' },
+  { id: 'ind-29', medicine_name: 'Ascoril-D Plus Cough Syrup', generic_name: 'Dextromethorphan + Chlorpheniramine', category: 'Cough & Cold', batch_number: 'BAT-IND-29', unit_mrp: 135, unit_cost_price: 80, unit_selling_price: 122, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2027-12-31', manufacturer: 'Glenmark' },
+  { id: 'ind-30', medicine_name: 'Electral ORS (WHO Formula)', generic_name: 'Oral Rehydration Salts', category: 'ORS & Electrolyte', batch_number: 'BAT-IND-30', unit_mrp: 24, unit_cost_price: 14, unit_selling_price: 21, stock_level: 100, reorder_alert_threshold: 20, expiry_date: '2029-03-31', manufacturer: 'FDC' }
+];
 
 export default function PharmacyDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'pos' | 'inventory' | 'expiry' | 'analytics' | 'bridge'>('pos');
   
-  // Inventory state from Supabase
-  const [inventory, setInventory] = useState<PharmacyInventoryItem[]>([]);
+  // Organization Context from Session
+  const [tenantInfo, setTenantInfo] = useState({
+    name: 'Apex Care Pharmacy Store',
+    staffName: 'Alex Chemist',
+    role: 'pharmacist'
+  });
+
+  // Inventory state (Indian Top 30 with 100 units each)
+  const [inventory, setInventory] = useState(TOP_30_INDIAN_MEDICINES);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  // Revenue & Sales Analytics (Dynamic state that increments with sales!)
+  const [totalSalesRevenue, setTotalSalesRevenue] = useState(38450); // initial ₹ revenue
+  const [todaySalesRevenue, setTodaySalesRevenue] = useState(4820);
+  const [totalBillsIssued, setTotalBillsIssued] = useState(38);
+  const [totalCOGS, setTotalCOGS] = useState(2450);
 
   // POS Cart State
   const [cart, setCart] = useState<any[]>([
-    { id: '1', medicine_name: 'Amoxicillin 500mg', batch: 'BAT-2026-A1', qty: 2, unit_price: 8.99, mrp: 9.99 },
-    { id: '2', medicine_name: 'Metformin HCl 500mg', batch: 'BAT-2026-M2', qty: 1, unit_price: 4.99, mrp: 5.50 }
+    { id: 'ind-01', medicine_name: 'Dolo 650 (Paracetamol 650mg)', batch: 'BAT-IND-01', qty: 2, unit_price: 30, cost_price: 18, mrp: 35 },
+    { id: 'ind-04', medicine_name: 'Pan 40 (Pantoprazole 40mg)', batch: 'BAT-IND-04', qty: 1, unit_price: 145, cost_price: 95, mrp: 160 }
   ]);
   const [customerName, setCustomerName] = useState('Walk-in Customer');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'card'>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cash' | 'card'>('upi');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [completedSale, setCompletedSale] = useState<any | null>(null);
 
@@ -53,44 +99,50 @@ export default function PharmacyDashboard() {
     medicine_name: '',
     category: 'Analgesics',
     batch_number: '',
-    unit_cost_price: 2.50,
-    unit_mrp: 6.00,
-    unit_selling_price: 5.50,
+    unit_cost_price: 50,
+    unit_mrp: 90,
+    unit_selling_price: 80,
     stock_level: 100,
-    reorder_alert_threshold: 25,
+    reorder_alert_threshold: 20,
     expiry_date: '2028-12-31'
   });
 
-  // Load Inventory from Supabase
+  // Load session
   useEffect(() => {
-    async function fetchInventory() {
+    const rawSession = localStorage.getItem('superclinic_session');
+    if (rawSession) {
       try {
-        const { data, error } = await supabase
-          .from('pharmacy_inventory')
-          .select('*')
-          .eq('tenant_id', '22222222-2222-2222-2222-222222222222')
-          .order('medicine_name', { ascending: true });
-
-        if (!error && data) {
-          setInventory(data);
-        }
-      } catch (err) {
-        console.error('Error fetching inventory:', err);
+        const parsed = JSON.parse(rawSession);
+        setTenantInfo({
+          name: parsed.tenant_name || 'Apex Care Pharmacy Store',
+          staffName: parsed.full_name || 'Alex Chemist',
+          role: parsed.role || 'pharmacist'
+        });
+      } catch (e) {
+        console.error('Session parse error:', e);
       }
     }
-    fetchInventory();
   }, []);
 
-  // Cart Calculations
+  // Cart Calculations in ₹ INR
   const subtotal = cart.reduce((acc, item) => acc + (item.unit_price * item.qty), 0);
   const discountAmount = (subtotal * discountPercent) / 100;
-  const taxAmount = (subtotal - discountAmount) * 0.05; // 5% GST/Tax
+  const taxAmount = (subtotal - discountAmount) * 0.05; // 5% GST
   const grandTotal = subtotal - discountAmount + taxAmount;
 
-  // Add medicine to cart
-  const handleAddToCart = (item: PharmacyInventoryItem) => {
+  // Add medicine to cart (checks stock limit)
+  const handleAddToCart = (item: any) => {
+    if (item.stock_level <= 0) {
+      alert(`Sorry! ${item.medicine_name} is currently OUT OF STOCK.`);
+      return;
+    }
+
     const existing = cart.find(c => c.id === item.id);
     if (existing) {
+      if (existing.qty >= item.stock_level) {
+        alert(`Cannot add more. Available stock limit is ${item.stock_level} units.`);
+        return;
+      }
       setCart(cart.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c));
     } else {
       setCart([...cart, {
@@ -99,6 +151,7 @@ export default function PharmacyDashboard() {
         batch: item.batch_number,
         qty: 1,
         unit_price: item.unit_selling_price,
+        cost_price: item.unit_cost_price,
         mrp: item.unit_mrp
       }]);
     }
@@ -106,9 +159,15 @@ export default function PharmacyDashboard() {
 
   // Cart quantity adjust
   const handleUpdateQty = (id: string, delta: number) => {
+    const itemInStock = inventory.find(inv => inv.id === id);
     setCart(cart.map(c => {
       if (c.id === id) {
-        const newQty = Math.max(1, c.qty + delta);
+        const newQty = c.qty + delta;
+        if (newQty < 1) return c;
+        if (itemInStock && newQty > itemInStock.stock_level) {
+          alert(`Maximum available stock is ${itemInStock.stock_level} units.`);
+          return c;
+        }
         return { ...c, qty: newQty };
       }
       return c;
@@ -120,10 +179,32 @@ export default function PharmacyDashboard() {
     setCart(cart.filter(c => c.id !== id));
   };
 
-  // Complete POS Sale
+  // REQUIREMENT 4: Dynamic stock deduction & revenue addition!
   const handleCheckout = () => {
-    const invoiceNum = `POS-${Date.now().toString().slice(-6)}`;
-    const saleData = {
+    const invoiceNum = `BILL-IN-${Date.now().toString().slice(-6)}`;
+    
+    // 1. Deduct exact units from Inventory
+    const updatedInventory = inventory.map(invItem => {
+      const soldItem = cart.find(c => c.id === invItem.id);
+      if (soldItem) {
+        const newStock = Math.max(0, invItem.stock_level - soldItem.qty);
+        return { ...invItem, stock_level: newStock };
+      }
+      return invItem;
+    });
+
+    setInventory(updatedInventory);
+
+    // 2. Compute cost and revenue
+    const cartCost = cart.reduce((acc, it) => acc + (it.cost_price * it.qty), 0);
+
+    setTotalSalesRevenue(prev => prev + grandTotal);
+    setTodaySalesRevenue(prev => prev + grandTotal);
+    setTotalCOGS(prev => prev + cartCost);
+    setTotalBillsIssued(prev => prev + 1);
+
+    // 3. Set completed sale receipt
+    setCompletedSale({
       invoice_number: invoiceNum,
       customer_name: customerName,
       subtotal,
@@ -132,19 +213,8 @@ export default function PharmacyDashboard() {
       total: grandTotal,
       paymentMethod,
       items: cart,
-      date: new Date().toLocaleString()
-    };
-
-    setCompletedSale(saleData);
-
-    // Decrement local inventory stock
-    setInventory(prev => prev.map(inv => {
-      const sold = cart.find(c => c.id === inv.id);
-      if (sold) {
-        return { ...inv, stock_level: Math.max(0, inv.stock_level - sold.qty) };
-      }
-      return inv;
-    }));
+      date: new Date().toLocaleString('en-IN')
+    });
 
     // Reset cart
     setCart([]);
@@ -154,38 +224,41 @@ export default function PharmacyDashboard() {
   const handleLookupToken = () => {
     setTokenError('');
     if (!inputTokenId) {
-      setTokenError('Please enter or scan a valid token.');
+      setTokenError('Please enter or scan a valid prescription QR code.');
       return;
     }
 
-    // Simulated token verification
     setTokenResult({
       id: inputTokenId,
-      clinic_name: 'City Health Clinic',
-      doctor_name: 'Dr. Smith, MD',
-      patient_masked_name: 'S*** J***',
-      patient_phone: '+1-555-1122',
+      clinic_name: 'Apollo Multi-Speciality Hospital',
+      doctor_name: 'Dr. Rajesh Sharma, MD',
+      patient_masked_name: 'P*** S***',
+      patient_phone: '+91 98765 43210',
       medications: [
-        { name: 'Amoxicillin 500mg', dosage: '500mg', frequency: '1-0-1', duration: '5 days' },
-        { name: 'Paracetamol 650mg', dosage: '650mg', frequency: '1-1-1', duration: '3 days' }
+        { name: 'Dolo 650 (Paracetamol 650mg)', dosage: '650mg', frequency: '1-1-1', duration: '3 days' },
+        { name: 'Augmentin 625 Duo', dosage: '625mg', frequency: '1-0-1', duration: '5 days' },
+        { name: 'Pan 40 (Pantoprazole 40mg)', dosage: '40mg', frequency: '1-0-0', duration: '5 days' }
       ],
       status: 'active',
-      expires_at: '2026-12-12'
+      expires_at: 'Valid for 30 Days'
     });
   };
 
   // Fulfill Token into Cart
   const handleFulfillToken = () => {
     if (!tokenResult) return;
-    // Add prescribed items to cart
     setCart([
-      { id: '1', medicine_name: 'Amoxicillin 500mg', batch: 'BAT-2026-A1', qty: 2, unit_price: 8.99, mrp: 9.99 },
-      { id: 'med-paracetamol', medicine_name: 'Paracetamol 650mg', batch: 'BAT-2026-P9', qty: 1, unit_price: 2.50, mrp: 3.00 }
+      { id: 'ind-01', medicine_name: 'Dolo 650 (Paracetamol 650mg)', batch: 'BAT-IND-01', qty: 2, unit_price: 30, cost_price: 18, mrp: 35 },
+      { id: 'ind-02', medicine_name: 'Augmentin 625 Duo', batch: 'BAT-IND-02', qty: 1, unit_price: 195, cost_price: 140, mrp: 220 },
+      { id: 'ind-04', medicine_name: 'Pan 40 (Pantoprazole 40mg)', batch: 'BAT-IND-04', qty: 1, unit_price: 145, cost_price: 95, mrp: 160 }
     ]);
     setCustomerName('Clinic Patient: ' + tokenResult.patient_masked_name);
     setTokenResult({ ...tokenResult, status: 'dispensed' });
     setActiveTab('pos');
   };
+
+  // Categories list
+  const categories = ['All', 'Antibiotics', 'Analgesics / Fever', 'Antacid / PPI', 'Antacid / GERD', 'Antidiabetic', 'Hypertension / BP', 'Cholesterol / Statin', 'Allergy & Respiratory', 'Multivitamins', 'Bone & Calcium'];
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900">
@@ -201,12 +274,12 @@ export default function PharmacyDashboard() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-base tracking-tight text-white">Apex Care Pharmacy</h1>
+                <h1 className="font-bold text-base tracking-tight text-white">{tenantInfo.name}</h1>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
-                  STANDALONE POS
+                  PHARMACY STORE POS (₹ INR)
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Cashier: Alex (Store Owner & Chief Pharmacist)</p>
+              <p className="text-xs text-slate-400">Cashier: {tenantInfo.staffName} • Retail Billing Terminal</p>
             </div>
           </div>
         </div>
@@ -214,9 +287,17 @@ export default function PharmacyDashboard() {
         {/* Right Status */}
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
-            <span className="text-slate-300">Low Stock Alert: <strong className="text-rose-400">1 Item</strong></span>
+            <span className="text-slate-300">Today&apos;s Revenue: <strong className="text-emerald-400">₹{todaySalesRevenue.toLocaleString('en-IN')}</strong></span>
           </div>
+
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1.5 text-xs text-emerald-300 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700 transition"
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Switch Store</span>
+          </button>
+
           <button
             onClick={() => router.push('/')}
             className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition"
@@ -251,8 +332,8 @@ export default function PharmacyDashboard() {
             }`}
           >
             <Boxes className="w-4 h-4 text-emerald-600" />
-            <span>Stock & Batch Inventory</span>
-            <span className="ml-auto text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono">{inventory.length}</span>
+            <span>Top 30 Indian Drug Stock</span>
+            <span className="ml-auto text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">30</span>
           </button>
 
           <button
@@ -272,7 +353,7 @@ export default function PharmacyDashboard() {
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-600" />
-            <span>Monthly Sales & Charts</span>
+            <span>Monthly Sales & Charts (₹)</span>
           </button>
 
           <button
@@ -282,25 +363,25 @@ export default function PharmacyDashboard() {
             }`}
           >
             <QrCode className="w-4 h-4 text-teal-400" />
-            <span>Fulfill Clinic Rx Token</span>
+            <span>Fulfill Hospital Rx Token</span>
           </button>
         </aside>
 
         {/* Center Content Viewport */}
         <main className="flex-1 p-6 overflow-y-auto">
           
-          {/* TAB 1: WALK-IN POS BILLING COUNTER */}
+          {/* TAB 1: POS BILLING COUNTER WITH TOP 30 INDIAN MEDICINES */}
           {activeTab === 'pos' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl">
               
               {/* Left Column: Product Search Grid */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-                  <div className="relative flex-1">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3">
+                  <div className="relative flex-1 min-w-[200px]">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
                       type="text"
-                      placeholder="Scan barcode or search medicine name / salt..."
+                      placeholder="Search Dolo, Augmentin, Pan 40, Azithromycin, Telma..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-600 font-medium"
@@ -308,44 +389,71 @@ export default function PharmacyDashboard() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono bg-slate-100 px-3 py-2 rounded-xl">
                     <Barcode className="w-4 h-4" />
-                    <span>Scanner Active</span>
+                    <span>Barcode Ready</span>
                   </div>
                 </div>
 
+                {/* Category Pills */}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition ${
+                        selectedCategory === cat
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Available Inventory Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1">
                   {inventory
-                    .filter(item => item.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .filter(item => {
+                      const matchesSearch = item.medicine_name.toLowerCase().includes(searchQuery.toLowerCase()) || item.generic_name.toLowerCase().includes(searchQuery.toLowerCase());
+                      const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
+                      return matchesSearch && matchesCat;
+                    })
                     .map((item) => (
                       <div
                         key={item.id}
                         onClick={() => handleAddToCart(item)}
-                        className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-md cursor-pointer transition group"
+                        className={`bg-white p-4 rounded-2xl border transition group cursor-pointer ${
+                          item.stock_level <= 0 
+                            ? 'border-slate-200 opacity-60 bg-slate-50 cursor-not-allowed'
+                            : 'border-slate-200 hover:border-emerald-500 hover:shadow-md'
+                        }`}
                       >
                         <div className="flex items-start justify-between">
                           <div>
-                            <span className="text-[10px] text-slate-400 font-mono">Batch: {item.batch_number}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{item.manufacturer} • {item.batch_number}</span>
                             <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-emerald-700 transition-colors">
                               {item.medicine_name}
                             </h4>
-                            <p className="text-xs text-slate-500">{item.dosage_form} • {item.category}</p>
+                            <p className="text-xs text-slate-500">{item.generic_name}</p>
                           </div>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                            item.stock_level <= item.reorder_alert_threshold
+                            item.stock_level <= 0
+                              ? 'bg-rose-600 text-white'
+                              : item.stock_level <= item.reorder_alert_threshold
                               ? 'bg-rose-100 text-rose-800'
                               : 'bg-emerald-100 text-emerald-800'
                           }`}>
-                            Qty: {item.stock_level}
+                            {item.stock_level <= 0 ? 'OUT OF STOCK' : `Stock: ${item.stock_level}`}
                           </span>
                         </div>
 
                         <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
                           <div>
-                            <span className="text-xs text-slate-400 line-through mr-1.5">${item.unit_mrp}</span>
-                            <span className="text-sm font-black text-slate-900">${item.unit_selling_price}</span>
+                            <span className="text-xs text-slate-400 line-through mr-1.5">₹{item.unit_mrp}</span>
+                            <span className="text-sm font-black text-slate-900">₹{item.unit_selling_price}</span>
                           </div>
                           <span className="text-xs font-bold text-emerald-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                            <span>+ Add to Bill</span>
+                            <span>+ Add to Cart</span>
                           </span>
                         </div>
                       </div>
@@ -358,7 +466,7 @@ export default function PharmacyDashboard() {
                 <div>
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div>
-                      <h3 className="font-black text-base text-slate-900">Active POS Cart</h3>
+                      <h3 className="font-black text-base text-slate-900">Retail Billing Counter</h3>
                       <input
                         type="text"
                         value={customerName}
@@ -375,14 +483,14 @@ export default function PharmacyDashboard() {
                   <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto my-4">
                     {cart.length === 0 ? (
                       <div className="py-12 text-center text-xs text-slate-400">
-                        Cart is empty. Click any medicine or scan barcode to add.
+                        Cart is empty. Select from top 30 Indian medicines or scan barcode.
                       </div>
                     ) : (
                       cart.map((item) => (
                         <div key={item.id} className="py-3 flex items-center justify-between text-xs">
                           <div>
                             <p className="font-bold text-slate-900">{item.medicine_name}</p>
-                            <p className="text-[10px] text-slate-400">Batch {item.batch} • ${item.unit_price} each</p>
+                            <p className="text-[10px] text-slate-400">Batch {item.batch} • ₹{item.unit_price} each</p>
                           </div>
 
                           <div className="flex items-center gap-3">
@@ -404,7 +512,7 @@ export default function PharmacyDashboard() {
                             </div>
 
                             <span className="font-bold text-slate-900 min-w-[50px] text-right">
-                              ${(item.unit_price * item.qty).toFixed(2)}
+                              ₹{(item.unit_price * item.qty).toFixed(2)}
                             </span>
 
                             <button 
@@ -419,11 +527,11 @@ export default function PharmacyDashboard() {
                     )}
                   </div>
 
-                  {/* Price Calculations */}
+                  {/* Price Calculations in ₹ INR */}
                   <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal:</span>
-                      <span className="font-medium">${subtotal.toFixed(2)}</span>
+                      <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-slate-600">
@@ -437,18 +545,18 @@ export default function PharmacyDashboard() {
                           onChange={(e) => setDiscountPercent(Number(e.target.value))}
                           className="w-12 px-1 py-0.5 rounded border border-slate-200 text-right text-xs"
                         />
-                        <span>% (-${discountAmount.toFixed(2)})</span>
+                        <span>% (-₹{discountAmount.toFixed(2)})</span>
                       </div>
                     </div>
 
                     <div className="flex justify-between text-slate-600">
-                      <span>GST / Tax (5%):</span>
-                      <span className="font-medium">+${taxAmount.toFixed(2)}</span>
+                      <span>GST (5%):</span>
+                      <span className="font-medium">+₹{taxAmount.toFixed(2)}</span>
                     </div>
 
                     <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                       <span>Grand Total:</span>
-                      <span className="text-emerald-600 text-base">${grandTotal.toFixed(2)}</span>
+                      <span className="text-emerald-600 text-base">₹{grandTotal.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -462,7 +570,7 @@ export default function PharmacyDashboard() {
                           paymentMethod === 'upi' ? 'bg-emerald-600 text-white border-emerald-600' : 'border-slate-200 text-slate-600'
                         }`}
                       >
-                        UPI / QR
+                        UPI / QR Code
                       </button>
                       <button
                         onClick={() => setPaymentMethod('cash')}
@@ -484,14 +592,14 @@ export default function PharmacyDashboard() {
                   </div>
                 </div>
 
-                {/* Checkout Button */}
+                {/* Checkout Button: Decrements Stock & Adds Revenue! */}
                 <button
                   disabled={cart.length === 0}
                   onClick={handleCheckout}
                   className="mt-6 w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-sm transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
                 >
                   <Receipt className="w-4 h-4" />
-                  <span>Charge & Print Receipt (${grandTotal.toFixed(2)})</span>
+                  <span>Deduct Stock & Print Bill (₹{grandTotal.toFixed(2)})</span>
                 </button>
               </div>
             </div>
@@ -502,8 +610,10 @@ export default function PharmacyDashboard() {
             <div className="space-y-6 max-w-6xl">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-900">Pharmacy Inventory & Batches</h2>
-                  <p className="text-xs text-slate-500 mt-1">Live from Supabase `pharmacy_inventory` table.</p>
+                  <h2 className="text-xl font-extrabold text-slate-900">Top 30 Indian Essential Medicines Stock</h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    All medicines initialized with 100 units. Sales automatically deduct from this live ledger.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -524,11 +634,11 @@ export default function PharmacyDashboard() {
                     <tr>
                       <th className="py-3 px-4">Medicine Name</th>
                       <th className="py-3 px-4">Category</th>
+                      <th className="py-3 px-4">Manufacturer</th>
                       <th className="py-3 px-4">Batch Number</th>
-                      <th className="py-3 px-4">Expiry Date</th>
-                      <th className="py-3 px-4">Cost Price</th>
-                      <th className="py-3 px-4">Selling MRP</th>
-                      <th className="py-3 px-4">Stock Level</th>
+                      <th className="py-3 px-4">Cost (₹)</th>
+                      <th className="py-3 px-4">Selling Price (₹)</th>
+                      <th className="py-3 px-4 font-bold text-emerald-700">Units in Stock</th>
                       <th className="py-3 px-4">Status</th>
                     </tr>
                   </thead>
@@ -537,23 +647,27 @@ export default function PharmacyDashboard() {
                       <tr key={item.id} className="hover:bg-slate-50">
                         <td className="py-3 px-4 font-bold text-slate-900">{item.medicine_name}</td>
                         <td className="py-3 px-4 text-slate-500">{item.category}</td>
+                        <td className="py-3 px-4 font-medium text-slate-600">{item.manufacturer}</td>
                         <td className="py-3 px-4 font-mono text-slate-600">{item.batch_number}</td>
-                        <td className="py-3 px-4">{item.expiry_date}</td>
-                        <td className="py-3 px-4">${item.unit_cost_price}</td>
-                        <td className="py-3 px-4 font-bold">${item.unit_selling_price}</td>
-                        <td className="py-3 px-4 font-bold">
-                          <span className={item.stock_level <= item.reorder_alert_threshold ? 'text-rose-600' : 'text-slate-800'}>
-                            {item.stock_level}
+                        <td className="py-3 px-4">₹{item.unit_cost_price}</td>
+                        <td className="py-3 px-4 font-bold">₹{item.unit_selling_price}</td>
+                        <td className="py-3 px-4 font-black">
+                          <span className={item.stock_level <= item.reorder_alert_threshold ? 'text-rose-600 text-sm' : 'text-slate-900 text-sm'}>
+                            {item.stock_level} Units
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          {item.stock_level <= item.reorder_alert_threshold ? (
+                          {item.stock_level <= 0 ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
+                              Out of Stock
+                            </span>
+                          ) : item.stock_level <= item.reorder_alert_threshold ? (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
-                              Reorder Alert
+                              Low Stock Alert
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                              Good Stock
+                              In Stock
                             </span>
                           )}
                         </td>
@@ -569,27 +683,27 @@ export default function PharmacyDashboard() {
           {activeTab === 'expiry' && (
             <div className="space-y-6 max-w-5xl">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <h2 className="text-xl font-extrabold text-slate-900">Expiry Date Dashboard</h2>
+                <h2 className="text-xl font-extrabold text-slate-900">Batch Expiry Date Guardian</h2>
                 <p className="text-xs text-slate-500 mt-1">Automatic alerts for batches nearing expiration. Zero expired medicines sold.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
-                  <span className="text-xs font-bold text-emerald-800">Safe Batches (6+ Months)</span>
-                  <h3 className="text-2xl font-black text-emerald-900 mt-1">2 Batches</h3>
-                  <p className="text-[11px] text-emerald-700 mt-1">Amoxicillin & Metformin (Exp 2028)</p>
+                  <span className="text-xs font-bold text-emerald-800">Safe Batches (Valid 2028-2029)</span>
+                  <h3 className="text-2xl font-black text-emerald-900 mt-1">28 Batches</h3>
+                  <p className="text-[11px] text-emerald-700 mt-1">Dolo, Augmentin, Pan 40, etc.</p>
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl">
-                  <span className="text-xs font-bold text-amber-800">Expiring in 12-18 Months</span>
-                  <h3 className="text-2xl font-black text-amber-900 mt-1">1 Batch</h3>
-                  <p className="text-[11px] text-amber-700 mt-1">Lisinopril 10mg (Exp Nov 2027)</p>
+                  <span className="text-xs font-bold text-amber-800">Expiring Late 2027</span>
+                  <h3 className="text-2xl font-black text-amber-900 mt-1">2 Batches</h3>
+                  <p className="text-[11px] text-amber-700 mt-1">Telma 40 & Ascoril-D Syrup</p>
                 </div>
 
                 <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl">
                   <span className="text-xs font-bold text-rose-800">Expired Stock Blocked</span>
                   <h3 className="text-2xl font-black text-rose-900 mt-1">0 Batches</h3>
-                  <p className="text-[11px] text-rose-700 mt-1">All shelf items valid</p>
+                  <p className="text-[11px] text-rose-700 mt-1">All shelf items safe & verified</p>
                 </div>
               </div>
             </div>
@@ -599,33 +713,39 @@ export default function PharmacyDashboard() {
           {activeTab === 'analytics' && (
             <div className="space-y-6 max-w-5xl">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <h2 className="text-xl font-extrabold text-slate-900">Monthly Turnover & Gross Margins</h2>
-                <p className="text-xs text-slate-500 mt-1">Real-time revenue reporting for pharmacy store owners.</p>
+                <h2 className="text-xl font-extrabold text-slate-900">Monthly Turnover & Gross Margins (₹ INR)</h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Live revenue accumulator that increments automatically on each counter sale!
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                  <span className="text-xs text-slate-500 font-bold uppercase">This Month&apos;s Sales</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">$4,820.00</h3>
-                  <p className="text-[11px] text-emerald-600 font-bold mt-1">↑ +18% growth</p>
+                  <span className="text-xs text-slate-500 font-bold uppercase">This Month&apos;s Revenue</span>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">₹{totalSalesRevenue.toLocaleString('en-IN')}</h3>
+                  <p className="text-[11px] text-emerald-600 font-bold mt-1">↑ Live accumulator</p>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <span className="text-xs text-slate-500 font-bold uppercase">Cost of Goods (COGS)</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">$2,410.00</h3>
-                  <p className="text-[11px] text-slate-500 mt-1">50% Procurement</p>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">₹{totalCOGS.toLocaleString('en-IN')}</h3>
+                  <p className="text-[11px] text-slate-500 mt-1">Wholesale Cost</p>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <span className="text-xs text-slate-500 font-bold uppercase">Gross Profit Margin</span>
-                  <h3 className="text-2xl font-black text-emerald-600 mt-1">$2,410.00</h3>
-                  <p className="text-[11px] text-emerald-700 font-bold mt-1">50.0% Gross Margin</p>
+                  <h3 className="text-2xl font-black text-emerald-600 mt-1">
+                    ₹{(totalSalesRevenue - totalCOGS).toLocaleString('en-IN')}
+                  </h3>
+                  <p className="text-[11px] text-emerald-700 font-bold mt-1">
+                    {((totalSalesRevenue - totalCOGS) / (totalSalesRevenue || 1) * 100).toFixed(1)}% Gross Margin
+                  </p>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <span className="text-xs text-slate-500 font-bold uppercase">Invoices Issued</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">142 Receipts</h3>
-                  <p className="text-[11px] text-slate-500 mt-1">Avg $33.94 / bill</p>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">{totalBillsIssued} Receipts</h3>
+                  <p className="text-[11px] text-slate-500 mt-1">Average ₹{(totalSalesRevenue / (totalBillsIssued || 1)).toFixed(0)} / bill</p>
                 </div>
               </div>
             </div>
@@ -637,11 +757,11 @@ export default function PharmacyDashboard() {
               <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-800">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold border border-teal-500/30 mb-3">
                   <QrCode className="w-3.5 h-3.5" />
-                  <span>SECURE CROSS-TENANT BRIDGE</span>
+                  <span>SECURE HOSPITAL TOKEN BRIDGE</span>
                 </div>
-                <h2 className="text-2xl font-extrabold tracking-tight">Fulfill Clinic Digital Prescription</h2>
+                <h2 className="text-2xl font-extrabold tracking-tight">Fulfill Hospital Digital Prescription</h2>
                 <p className="text-slate-300 text-xs mt-1 leading-relaxed">
-                  Enter the UUID token or scan the patient&apos;s QR code. The system securely retrieves the medication snapshot without accessing private clinic EMR records.
+                  Enter or scan the patient&apos;s digital prescription token. The system securely retrieves the medication snapshot without accessing private clinic EMR records.
                 </p>
 
                 <div className="mt-5 flex gap-2">
@@ -649,14 +769,14 @@ export default function PharmacyDashboard() {
                     type="text"
                     value={inputTokenId}
                     onChange={(e) => setInputTokenId(e.target.value)}
-                    placeholder="Paste Prescription Token UUID (e.g. d8f4b620-89ab-...)"
+                    placeholder="Enter Prescription Token (e.g. IND-RX-8912401 or paste from clinic)"
                     className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:border-teal-400 font-mono"
                   />
                   <button
                     onClick={handleLookupToken}
                     className="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition"
                   >
-                    Verify Token
+                    Verify QR Token
                   </button>
                 </div>
 
@@ -676,11 +796,11 @@ export default function PharmacyDashboard() {
                       </h3>
                       <p className="text-xs text-slate-500">Patient: <strong>{tokenResult.patient_masked_name}</strong> • Phone: {tokenResult.patient_phone}</p>
                     </div>
-                    <span className="text-xs text-slate-400 font-mono">Valid 30 Days</span>
+                    <span className="text-xs text-slate-400 font-mono">{tokenResult.expires_at}</span>
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Prescribed Items Snapshot</h4>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Prescribed Medications</h4>
                     <div className="space-y-2">
                       {tokenResult.medications.map((m: any, i: number) => (
                         <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
@@ -688,7 +808,7 @@ export default function PharmacyDashboard() {
                             <span className="font-bold text-slate-900">{m.name}</span>
                             <span className="text-slate-500 ml-2">({m.frequency} for {m.duration})</span>
                           </div>
-                          <span className="text-emerald-700 font-bold">In Stock</span>
+                          <span className="text-emerald-700 font-bold">100 Units In Stock</span>
                         </div>
                       ))}
                     </div>
@@ -699,7 +819,7 @@ export default function PharmacyDashboard() {
                     className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
                   >
                     <ShoppingBag className="w-4 h-4" />
-                    <span>Load Into POS Cart & Dispense to Patient</span>
+                    <span>Load 3 Medicines into Billing Cart & Dispense</span>
                   </button>
                 </div>
               )}
@@ -709,15 +829,15 @@ export default function PharmacyDashboard() {
         </main>
       </div>
 
-      {/* COMPLETED SALE RECEIPT MODAL */}
+      {/* COMPLETED SALE RECEIPT MODAL IN ₹ INR */}
       {completedSale && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-xs">
             {/* Thermal Print Receipt Simulation */}
             <div className="text-center pb-4 border-b border-dashed border-slate-300">
-              <h3 className="font-black text-sm uppercase text-slate-900">Apex Care Pharmacy</h3>
-              <p className="text-[10px] text-slate-500">456 Market St, Downtown • Ph: +1-555-0202</p>
-              <p className="text-[10px] font-mono text-slate-600 mt-1">Receipt: {completedSale.invoice_number}</p>
+              <h3 className="font-black text-sm uppercase text-slate-900">{tenantInfo.name}</h3>
+              <p className="text-[10px] text-slate-500">Retail Chemist & Medical Store • GSTIN: 27AABCT3518Q1Z4</p>
+              <p className="text-[10px] font-mono text-slate-600 mt-1">Tax Invoice: {completedSale.invoice_number}</p>
               <p className="text-[10px] text-slate-400">{completedSale.date}</p>
             </div>
 
@@ -727,7 +847,7 @@ export default function PharmacyDashboard() {
                 {completedSale.items.map((it: any, i: number) => (
                   <div key={i} className="flex justify-between">
                     <span>{it.qty}x {it.medicine_name}</span>
-                    <span className="font-mono">${(it.unit_price * it.qty).toFixed(2)}</span>
+                    <span className="font-mono">₹{(it.unit_price * it.qty).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -736,15 +856,15 @@ export default function PharmacyDashboard() {
             <div className="py-3 space-y-1">
               <div className="flex justify-between text-slate-500">
                 <span>Subtotal:</span>
-                <span>${completedSale.subtotal.toFixed(2)}</span>
+                <span>₹{completedSale.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-500">
                 <span>GST (5%):</span>
-                <span>+${completedSale.tax.toFixed(2)}</span>
+                <span>+₹{completedSale.tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm font-black text-slate-900 pt-1 border-t border-slate-200">
-                <span>PAID ({completedSale.paymentMethod.toUpperCase()}):</span>
-                <span>${completedSale.total.toFixed(2)}</span>
+                <span>TOTAL PAID ({completedSale.paymentMethod.toUpperCase()}):</span>
+                <span className="text-emerald-700 font-black">₹{completedSale.total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -760,7 +880,7 @@ export default function PharmacyDashboard() {
                 className="flex-1 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Print Slip</span>
+                <span>Print Bill</span>
               </button>
             </div>
           </div>
@@ -778,7 +898,7 @@ export default function PharmacyDashboard() {
                 <label className="block text-slate-700 font-bold mb-1">Medicine Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Ciprofloxacin 500mg"
+                  placeholder="e.g. Cefpodoxime 200mg"
                   value={newMed.medicine_name}
                   onChange={(e) => setNewMed({ ...newMed, medicine_name: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-600"
@@ -790,7 +910,7 @@ export default function PharmacyDashboard() {
                   <label className="block text-slate-700 font-bold mb-1">Batch Number</label>
                   <input
                     type="text"
-                    placeholder="BAT-2026-X1"
+                    placeholder="BAT-IND-31"
                     value={newMed.batch_number}
                     onChange={(e) => setNewMed({ ...newMed, batch_number: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-600 font-mono"
@@ -809,7 +929,7 @@ export default function PharmacyDashboard() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Cost Price ($)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Cost Price (₹)</label>
                   <input
                     type="number"
                     value={newMed.unit_cost_price}
@@ -818,7 +938,7 @@ export default function PharmacyDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Selling MRP ($)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Selling MRP (₹)</label>
                   <input
                     type="number"
                     value={newMed.unit_selling_price}
@@ -850,18 +970,18 @@ export default function PharmacyDashboard() {
                 onClick={() => {
                   if (newMed.medicine_name && newMed.batch_number) {
                     setInventory([...inventory, {
-                      id: Date.now().toString(),
-                      tenant_id: '22222222-2222-2222-2222-222222222222',
+                      id: `med-${Date.now()}`,
                       medicine_name: newMed.medicine_name,
+                      generic_name: newMed.medicine_name,
                       category: newMed.category,
-                      dosage_form: 'Tablet',
                       batch_number: newMed.batch_number,
-                      expiry_date: newMed.expiry_date,
                       unit_cost_price: newMed.unit_cost_price,
                       unit_mrp: newMed.unit_mrp,
                       unit_selling_price: newMed.unit_selling_price,
                       stock_level: newMed.stock_level,
-                      reorder_alert_threshold: newMed.reorder_alert_threshold
+                      reorder_alert_threshold: newMed.reorder_alert_threshold,
+                      expiry_date: newMed.expiry_date,
+                      manufacturer: 'Indian Pharma Co.'
                     }]);
                     setShowAddModal(false);
                   }
@@ -878,4 +998,3 @@ export default function PharmacyDashboard() {
     </div>
   );
 }
-

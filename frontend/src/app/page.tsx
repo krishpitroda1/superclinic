@@ -15,10 +15,10 @@ import AuthModal from '@/components/AuthModal';
 
 export default function LandingPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [defaultRole, setDefaultRole] = useState<'doctor' | 'pharmacist' | 'receptionist'>('doctor');
+  const [defaultType, setDefaultType] = useState<'clinic' | 'pharmacy'>('clinic');
 
-  const handleOpenAuth = (role?: 'doctor' | 'pharmacist' | 'receptionist') => {
-    if (role) setDefaultRole(role);
+  const handleOpenAuth = (type?: 'clinic' | 'pharmacy') => {
+    if (type) setDefaultType(type);
     setAuthModalOpen(true);
   };
 
@@ -33,7 +33,7 @@ export default function LandingPage() {
         <Hero onOpenAuth={handleOpenAuth} />
 
         {/* Dedicated Standalone Pharmacy Store Owner Section */}
-        <PharmacyStoreOwnerSection onOpenAuth={(role) => handleOpenAuth(role || 'pharmacist')} />
+        <PharmacyStoreOwnerSection onOpenAuth={(type) => handleOpenAuth(type || 'pharmacy')} />
 
         {/* Complete Features Showcase (Clinic HIS vs Pharmacy POS vs Bridge) */}
         <FeaturesShowcase />
@@ -41,8 +41,8 @@ export default function LandingPage() {
         {/* 4-Step End-to-End Workflow */}
         <HowItWorks />
 
-        {/* Transparent Pricing (Including Direct Pharmacy POS Purchase) */}
-        <PricingSection onOpenAuth={(role) => handleOpenAuth(role || 'doctor')} />
+        {/* Transparent Pricing in ₹ INR (Including Direct Pharmacy POS Purchase) */}
+        <PricingSection onOpenAuth={(type) => handleOpenAuth(type || 'clinic')} />
 
         {/* Interactive FAQ Accordion */}
         <FAQSection />
@@ -57,11 +57,11 @@ export default function LandingPage() {
       {/* Footer */}
       <Footer />
 
-      {/* Role-Based Authentication & 1-Click Demo Modal */}
+      {/* Multi-Tenant Authentication Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        defaultRole={defaultRole}
+        defaultType={defaultType}
       />
     </div>
   );

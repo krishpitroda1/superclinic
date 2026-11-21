@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Check, Sparkles, Pill, Stethoscope, Building2 } from 'lucide-react';
 
 interface PricingSectionProps {
-  onOpenAuth: (role?: 'doctor' | 'pharmacist') => void;
+  onOpenAuth: (type?: 'clinic' | 'pharmacy') => void;
 }
 
 export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
@@ -17,13 +17,13 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <h2 className="text-xs uppercase tracking-widest font-bold text-teal-600 mb-2">
-            Transparent Subscription Tiers
+            Transparent Pricing in ₹ Indian Rupees (INR)
           </h2>
           <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             Buy What You Need. Scale When You Grow.
           </p>
           <p className="mt-3 text-slate-600 text-base">
-            Pharmacy owners can purchase the Standalone POS directly. Clinics can run solo or expand to full in-house pharmacy operations.
+            Pharmacy store owners can purchase the Standalone POS directly. Clinics can run solo or expand to full in-house pharmacy operations.
           </p>
 
           {/* Monthly / Annual Toggle */}
@@ -58,7 +58,7 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
               
               <div className="mb-6">
                 <span className="text-3xl font-extrabold text-slate-900">
-                  ${isAnnual ? '24' : '29'}
+                  ₹{isAnnual ? '1,599' : '1,999'}
                 </span>
                 <span className="text-xs text-slate-500"> / month</span>
               </div>
@@ -82,20 +82,20 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span>Branded PDF Invoices</span>
+                  <span>Cabin vs Admin Fee Collection</span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => onOpenAuth('doctor')}
+              onClick={() => onOpenAuth('clinic')}
               className="mt-8 w-full py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition"
             >
               Start Free Trial
             </button>
           </div>
 
-          {/* Plan 2: STANDALONE PHARMACY POS (Direct to Store Owners!) */}
+          {/* Plan 2: STANDALONE PHARMACY STORE (Direct to Store Owners!) */}
           <div className="rounded-3xl border-2 border-emerald-500 p-6 flex flex-col justify-between bg-white shadow-xl shadow-emerald-500/10 relative">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
@@ -105,13 +105,13 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
             <div>
               <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm mb-2 mt-1">
                 <Pill className="w-4 h-4" />
-                <span>Standalone Pharmacy POS</span>
+                <span>Standalone Pharmacy Store</span>
               </div>
-              <p className="text-xs text-slate-500 mb-4">For independent chemists and pharmacy store owners.</p>
+              <p className="text-xs text-slate-500 mb-4">For independent retail chemists and pharmacy owners.</p>
               
               <div className="mb-6">
                 <span className="text-3xl font-extrabold text-slate-900">
-                  ${isAnnual ? '39' : '49'}
+                  ₹{isAnnual ? '1,999' : '2,499'}
                 </span>
                 <span className="text-xs text-slate-500"> / month</span>
               </div>
@@ -123,15 +123,15 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Real-time Batch Stock Management</span>
+                  <span>Top 30 Indian Drug Inventory Stock</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Expiry Alerts (30/60/90 Days)</span>
+                  <span>Batch Expiry Alerts (30/60/90 Days)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Total Monthly Sales & Profit Charts</span>
+                  <span>Total Monthly Sales & Profit in ₹</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -139,16 +139,16 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Optional: Fulfill Clinic QR Prescriptions</span>
+                  <span>Optional: Scan Clinic QR Prescriptions</span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => onOpenAuth('pharmacist')}
+              onClick={() => onOpenAuth('pharmacy')}
               className="mt-8 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md shadow-emerald-600/20"
             >
-              Get Pharmacy POS
+              Get Pharmacy Store POS
             </button>
           </div>
 
@@ -163,7 +163,7 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
               
               <div className="mb-6">
                 <span className="text-3xl font-extrabold text-slate-900">
-                  ${isAnnual ? '65' : '79'}
+                  ₹{isAnnual ? '3,999' : '4,999'}
                 </span>
                 <span className="text-xs text-slate-500"> / month</span>
               </div>
@@ -187,13 +187,13 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span>Doctor Revenue Share Analytics</span>
+                  <span>Doctor Consultation History Tracker</span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => onOpenAuth('doctor')}
+              onClick={() => onOpenAuth('clinic')}
               className="mt-8 w-full py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition"
             >
               Choose Clinic Pro
@@ -207,11 +207,11 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 <Sparkles className="w-4 h-4" />
                 <span>Healthcare Suite</span>
               </div>
-              <p className="text-xs text-slate-400 mb-4">Complete Hospital OPD + In-House Pharmacy.</p>
+              <p className="text-xs text-slate-400 mb-4">Hospital OPD + In-House Pharmacy Store.</p>
               
               <div className="mb-6">
                 <span className="text-3xl font-extrabold text-white">
-                  ${isAnnual ? '89' : '109'}
+                  ₹{isAnnual ? '6,499' : '7,999'}
                 </span>
                 <span className="text-xs text-slate-400"> / month</span>
               </div>
@@ -219,7 +219,7 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
               <ul className="space-y-2.5 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 shrink-0" />
-                  <span>Full Clinic HIS + In-house Pharmacy POS</span>
+                  <span>Full Clinic HIS + In-house Pharmacy Store</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 shrink-0" />
@@ -231,17 +231,17 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 shrink-0" />
-                  <span>Full Audit Logs & HIPAA Compliance</span>
+                  <span>Full Audit Logs & Compliance</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 shrink-0" />
-                  <span>Dedicated Account Manager & SLA</span>
+                  <span>Priority Indian WhatsApp & Phone Support</span>
                 </li>
               </ul>
             </div>
 
             <button
-              onClick={() => onOpenAuth('doctor')}
+              onClick={() => onOpenAuth('clinic')}
               className="mt-8 w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold transition"
             >
               Deploy Full Suite
@@ -254,4 +254,3 @@ export default function PricingSection({ onOpenAuth }: PricingSectionProps) {
     </section>
   );
 }
-

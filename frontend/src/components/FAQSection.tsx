@@ -8,28 +8,28 @@ export default function FAQSection() {
 
   const faqs = [
     {
-      q: 'Can I purchase and use the Pharmacy POS without buying the Clinic software?',
-      a: 'Yes, 100%! We sell the Standalone Pharmacy POS directly to retail chemist and pharmacy store owners for $49/month. You can manage inventory, batch numbers, expiry warnings, walk-in cash/UPI sales, and monthly turnover charts completely independently with zero clinic dependency.'
+      q: 'Can I purchase and use the Pharmacy Store software without buying the Clinic software?',
+      a: 'Yes, 100%! We sell the Standalone Pharmacy Store POS directly to retail chemist and pharmacy shop owners for ₹2,499/month. You can manage stock of all 30+ Indian essential medicines (Dolo, Augmentin, Pan-40, etc.), batch numbers, expiry warnings, walk-in cash/UPI sales in ₹ INR, and monthly turnover charts completely independently with zero clinic dependency.'
     },
     {
       q: 'How does the prescription fulfillment bridge work between clinics and pharmacies?',
-      a: 'When a doctor issues a digital prescription in the Clinic HIS, the system automatically creates a de-identified dispense token with a unique UUID/QR code. The patient presents this token at any pharmacy running our POS. The pharmacist scans the code, loads the prescribed medications into their POS cart, and completes the sale without ever gaining direct database access to the clinic’s private patient records.'
+      a: 'When a doctor issues a digital prescription in the Clinic HIS, the system automatically creates a de-identified dispense token with a unique UUID/QR code. The patient presents this token at any pharmacy running our software. The pharmacist scans the code, loads the prescribed medications into their POS cart, and completes the sale without ever gaining direct database access to the clinic’s private patient records.'
     },
     {
-      q: 'How is tenant data isolated and secured in Supabase?',
+      q: 'How is tenant data isolated and secured in Supabase for multiple hospitals?',
       a: 'We use PostgreSQL Row-Level Security (RLS) policies at the database engine level. Every query is filtered by the authenticated user’s tenant ID and tenant type. Clinic staff can never query pharmacy tables, and pharmacy staff can never access clinic EMR records, even if an API route was compromised.'
     },
     {
-      q: 'Does the Pharmacy POS support barcode scanners and thermal printers?',
-      a: 'Yes. The POS billing interface supports standard USB/Bluetooth barcode scanners (HID mode). Invoices can be printed on standard 2-inch or 3-inch thermal roll printers (ESC/POS compatible) as well as full A4 page printers.'
+      q: 'Does the Pharmacy Store POS support barcode scanners and thermal receipt printers?',
+      a: 'Yes. The POS billing interface supports standard USB/Bluetooth barcode scanners (HID mode). Invoices can be printed on standard 2-inch or 3-inch thermal roll printers (ESC/POS compatible) as well as full A4 page printers with GST calculation.'
     },
     {
-      q: 'How does the WhatsApp Broadcast integration handle doctor delays?',
-      a: 'The Clinic HIS has a built-in delay alert dispatcher connected to the Meta WhatsApp Cloud API. If a doctor is delayed by emergency consultations, the receptionist can trigger a delay broadcast to all scheduled patients for that time slot in one click.'
+      q: 'Can doctors collect consultation fees in their cabin or send patients to the reception desk?',
+      a: 'Yes! Upon completing any consultation, the doctor can choose either: (1) Collect consultation fee directly in the doctor cabin via Cash/UPI, or (2) Route the patient to the Reception/Admin desk for payment collection. The reception desk receives an instant alert with the patient name and fee due.'
     },
     {
-      q: 'Are patient medical records compliant with HIPAA / GDPR audit guidelines?',
-      a: 'Yes. Our database schema includes automated PostgreSQL trigger-based audit logs for every creation, modification, or deletion of patient EMR profiles and prescriptions. In addition, our API layer logs all read and PDF export operations with IP addresses and user timestamps.'
+      q: 'What happens to patients after doctor consultation is completed?',
+      a: 'As soon as the doctor marks a consultation completed, the patient is automatically removed from the active Reception Lobby queue and moved to the Consultation History ledger with full diagnostic notes, prescribed medicines, and billing status.'
     }
   ];
 
@@ -46,7 +46,7 @@ export default function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="mt-2 text-slate-600 text-sm">
-            Everything you need to know about our Clinic HIS, Standalone Pharmacy POS, and security.
+            Everything you need to know about our Multi-Hospital HIS, Standalone Pharmacy Store, and Indian healthcare workflows.
           </p>
         </div>
 
@@ -83,4 +83,3 @@ export default function FAQSection() {
     </section>
   );
 }
-

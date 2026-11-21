@@ -15,10 +15,10 @@ export default function Footer() {
               <div className="w-9 h-9 rounded-xl bg-teal-500 flex items-center justify-center text-slate-950 font-bold">
                 <Stethoscope className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-lg text-white">SuperClinic + RxPOS</span>
+              <span className="font-extrabold text-lg text-white">SuperClinic & Pharmacy Store</span>
             </div>
             <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm mb-4">
-              Unified multi-tenant cloud software for modern healthcare. Deploy independently as a Clinic HIS, standalone Pharmacy POS, or together with automated prescription QR dispensing.
+              Unified multi-tenant cloud software for Indian healthcare providers and retail pharmacies. Deploy independently as a Clinic HIS, standalone Pharmacy Store POS, or together with automated prescription QR dispensing.
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -38,9 +38,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 2: Pharmacy POS */}
+          {/* Column 2: Pharmacy Store */}
           <div>
-            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-4">Pharmacy POS</h4>
+            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-4">Pharmacy Store</h4>
             <ul className="space-y-2 text-xs text-slate-400">
               <li><a href="#pharmacy-standalone" className="hover:text-white transition">Standalone POS Software</a></li>
               <li><a href="#pharmacy-standalone" className="hover:text-white transition">Batch & Expiry Tracker</a></li>
@@ -56,7 +56,7 @@ export default function Footer() {
             <ul className="space-y-2 text-xs text-slate-400">
               <li><a href="#about" className="hover:text-white transition">HIPAA / GDPR Ready</a></li>
               <li><a href="#about" className="hover:text-white transition">Immutable Audit Logs</a></li>
-              <li><a href="#pricing" className="hover:text-white transition">Subscription Tiers</a></li>
+              <li><a href="#pricing" className="hover:text-white transition">Pricing in ₹ INR</a></li>
               <li><a href="#faq" className="hover:text-white transition">FAQ Documentation</a></li>
               <li><a href="#contact" className="hover:text-white transition">Enterprise SLA</a></li>
             </ul>
@@ -65,15 +65,14 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
-          <p>© {new Date().getFullYear()} SuperClinic & RxPOS Technologies Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} SuperClinic & Pharmacy Store Technologies. All rights reserved.</p>
           <p className="flex items-center gap-1">
             <span>Built with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>for doctors, pharmacists & patients worldwide.</span>
+            <span>for Indian doctors, pharmacists & patients.</span>
           </p>
         </div>
       </div>
     </footer>
   );
 }
-

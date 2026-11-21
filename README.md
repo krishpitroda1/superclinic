@@ -1,6 +1,6 @@
-# SuperClinic & RxPOS
+# SuperClinic & Pharmacy Store
 
-> **Unified Multi-Tenant Clinic HIS & Standalone Pharmacy POS SaaS Platform**
+> **Unified Multi-Tenant Clinic HIS & Standalone Pharmacy Store SaaS Platform**
 
 Built with **Next.js 14**, **TypeScript**, **Tailwind CSS**, and **Supabase (PostgreSQL 15+)** with strict **Row-Level Security (RLS)**.
 
@@ -9,35 +9,69 @@ Built with **Next.js 14**, **TypeScript**, **Tailwind CSS**, and **Supabase (Pos
 ## 🌟 Features Overview
 
 ### 1. Public Marketing Landing Page (`/`)
-- **Interactive Dual Preview in Hero**: Live switch between Clinic HIS and Pharmacy POS views.
-- **Dedicated Standalone Pharmacy Store Owner Section**: Explicitly marketed for independent retail chemist & pharmacy shop owners (inventory, expiry tracking, walk-in billing counter, and monthly turnover/profit charts).
-- **Features Showcase**: Tabbed comparison of Clinic HIS, Standalone Pharmacy POS, and the zero-coupling QR token bridge.
-- **Transparent Pricing**: Monthly/Annual toggle featuring the dedicated **$49/mo Standalone Pharmacy POS** tier, Clinic Starter ($29/mo), Clinic Pro ($79/mo), and Complete Healthcare Suite ($109/mo).
+- **Interactive Dual Preview in Hero**: Live switch between Clinic HIS and Pharmacy Store views in ₹ INR.
+- **Dedicated Standalone Pharmacy Store Owner Section**: Explicitly marketed for independent retail chemist & pharmacy shop owners (inventory, expiry tracking, walk-in billing counter in ₹, and monthly turnover/profit charts).
+- **Features Showcase**: Tabbed comparison of Clinic HIS, Standalone Pharmacy Store, and the zero-coupling QR token bridge.
+- **Transparent Pricing in ₹ INR**: Monthly/Annual toggle featuring the dedicated **₹2,499/mo Standalone Pharmacy Store** tier, Clinic Starter (₹1,999/mo), Clinic Pro (₹4,999/mo), and Complete Healthcare Suite (₹7,999/mo).
 - **Interactive FAQ & About Sections**: Highlighting PostgreSQL RLS isolation, HIPAA/GDPR audit logging, and ESC/POS thermal printer compatibility.
-- **1-Click Test Persona Switcher**: Instant access to pre-seeded roles (`Dr. Smith`, `Alex Pharmacist`, `Emily Receptionist`).
+- **Multi-Hospital & Multi-Pharmacy Portal Switcher**: Select from Apollo Hospital, City Health Clinic, Fortis Healthcare, Apex Care Pharmacy Store, MedPlus Chemist, or register a new organization!
 
 ---
 
 ### 2. Clinic HIS Portal (`/clinic`)
-- **Smart Queue & Token Manager**: Live OPD tokens, automated emergency priority bumping (promotes critical patients to Token #1 with audible/visual alerts), and walk-in patient intake.
-- **Patient EMR Directory**: Tabbed medical records with vitals (height, weight, BP, blood group), chronic conditions, and allergy warnings loaded live from Supabase.
-- **Digital Prescriptions with ICD-10 Search**: Form with validated ICD-10 search codes (`J06.9`, `E11.9`, `I10`), medication schedule, advice, and printable PDF prescription with doctor signature block.
+- **Reception Lobby Queue**: Live OPD queue tracking waiting patients with emergency priority elevation.
+- **Doctor Cabin & Prescriptions**: Diagnostic editor with validated ICD-10 search (`J06.9`, `E11.9`, `I10`), medication schedule with Indian medicines (Dolo 650, Augmentin 625, Pan 40), and doctor advice.
+- **Dual Fee Collection Routing (Requirement 6)**:
+  - **Option A (Collect in Cabin)**: Doctor collects consultation fee (₹500) directly in the cabin via UPI/Cash and completes consult.
+  - **Option B (Send to Reception Desk)**: Doctor routes the patient to the Reception Desk, where the receptionist collects the pending fee and issues the receipt!
+- **Consultation History Ledger (Requirement 5)**:
+  - Once consultation is completed, the patient is **automatically removed from the Reception Lobby** and moved to the Consultation History ledger with full diagnostic notes and prescription history!
 - **Auto-Generated Dispense Token**: Automatically generates a secure, de-identified QR/UUID token for external pharmacy dispensing without database coupling.
-- **Fee Collection & Invoicing**: Record consultation charges via UPI/Cash/Card and print branded receipts.
 - **WhatsApp Delay Broadcast Simulator**: Send bulk announcements to all waiting patients when emergencies cause OPD delays.
-- **Financial & Footfall Analytics**: Daily collections and payment method distributions.
+- **Financial & Footfall Analytics (₹ INR)**: Daily collections and payment method distributions.
 
 ---
 
-### 3. Standalone Pharmacy POS Portal (`/pharmacy`)
-- **Rapid Walk-in POS Billing Counter**:
-  - Live medicine search with barcode/SKU scanner simulation.
-  - Interactive cart with strip/tablet quantity adjusters, discount percentages, tax calculation, and Grand Total.
-  - Cash, UPI, and Card checkout with thermal receipt / A4 print modal.
-  - **Atomic stock decrement**: Sales automatically decrement stock levels in real time.
-- **Stock & Batch Inventory**: Live stock levels, batch numbers, cost prices, selling MRP, and low-stock reorder alert badges.
-- **Expiry Date Guardian**: Expiry tracker preventing expired medicines from being rung up at the counter with 30/60/90-day alert thresholds.
-- **Monthly Turnover & Profit Analytics**: Monthly sales totals, Cost of Goods (COGS), and gross profit margins.
+### 3. Standalone Pharmacy Store POS Portal (`/pharmacy`)
+- **Top 30 Indian Essential & Most-Selling Medicines (Requirement 4)**:
+  - Initialized with **100 units in stock** for all 30 top Indian branded medicines:
+    1. Dolo 650
+    2. Augmentin 625 Duo
+    3. Azee 500
+    4. Pan 40
+    5. Omez-D
+    6. Glycomet 500
+    7. Amaryl 2
+    8. Telma 40
+    9. Amlong 5
+    10. Atorva 10
+    11. Montair LC
+    12. Cetzine 10
+    13. Ciplox 500
+    14. Taxim-O 200
+    15. Zerodol-SP
+    16. Voveran 50
+    17. Combiflam
+    18. Emeset 4
+    19. Vomistop
+    20. Flagyl 400
+    21. Rantac 150
+    22. Losar 50
+    23. Rosuvas 10
+    24. Deplatt 75
+    25. Thyronorm 50
+    26. Calcirol Sachet (Uprise D3 60k)
+    27. Becosules Z
+    28. Shelcal 500
+    29. Ascoril-D Plus Syrup
+    30. Electral ORS WHO Formula
+- **Real-Time Stock Decrement & Revenue Addition**:
+  - Selling an item decrements stock levels in real time (`stock_level - quantity`).
+  - Total Sales Revenue and Today's Sales automatically accumulate in ₹ INR.
+  - Stock limits are strictly checked (prevents selling more than available units or when out of stock).
+- **Rapid Walk-in POS Billing Counter**: Barcode search, cart adjustments, discounts, and UPI/Cash/Card checkout with printable thermal receipts.
+- **Batch Expiry Date Guardian**: Expiry tracker preventing expired medicines from being rung up at the counter with 30/60/90-day alert thresholds.
+- **Monthly Turnover & Profit Analytics**: Monthly sales totals in ₹, Cost of Goods (COGS), and gross profit margins.
 - **Prescription Token Fulfillment Bridge**:
   - Enter or scan the clinic prescription token UUID.
   - Securely inspects the medication snapshot without accessing the clinic's private EMR database.
@@ -52,7 +86,7 @@ superclinic/
 ├── backend/                   # Node.js / Express API Architecture
 │   ├── src/
 │   │   ├── middleware/        # Supabase Auth, Tenant Isolation, RBAC & EMR Audit Logger
-│   │   ├── routes/            # Clinic HIS, Pharmacy POS, and WhatsApp Webhooks
+│   │   ├── routes/            # Clinic HIS, Pharmacy Store, and WhatsApp Webhooks
 │   │   ├── types/             # TypeScript definitions
 │   │   └── server.ts          # Server entry point
 │   ├── .env.example
@@ -62,9 +96,9 @@ superclinic/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── page.tsx       # Public Marketing Landing Page
-│   │   │   ├── clinic/        # Clinic HIS Portal
-│   │   │   └── pharmacy/      # Standalone Pharmacy POS Portal
-│   │   ├── components/        # UI Components (Hero, Navbar, Pricing, FAQ, etc.)
+│   │   │   ├── clinic/        # Clinic HIS Portal (Lobby, Cabin, History, Billing)
+│   │   │   └── pharmacy/      # Standalone Pharmacy Store POS (30 Indian Medicines, Stock & Revenue)
+│   │   ├── components/        # UI Components (Hero, Navbar, Pricing, FAQ, AuthModal)
 │   │   ├── lib/               # Supabase Client & Service Role helpers
 │   │   └── types/             # Frontend Types
 │   ├── .env.example
