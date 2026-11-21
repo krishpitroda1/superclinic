@@ -939,7 +939,15 @@ export default function ClinicDashboard() {
                   <span className="font-bold text-sm text-teal-900 flex items-center gap-1.5">
                     <span>Option A: Collect Fee in Doctor Cabin</span>
                   </span>
-                  <span className="text-xs font-black text-teal-700">₹{cabinFeeAmount}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-teal-700">₹</span>
+                    <input
+                      type="number"
+                      value={cabinFeeAmount}
+                      onChange={(e) => setCabinFeeAmount(Number(e.target.value) || 0)}
+                      className="w-20 px-2 py-0.5 text-xs font-black text-teal-900 border border-teal-300 rounded bg-white text-right"
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
